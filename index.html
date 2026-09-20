@@ -2,86 +2,214 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BizFlow CRM</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
-button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:10px 14px}
-.app{display:flex;min-height:100vh}.sidebar{width:230px;background:#111827;color:white;padding:22px 16px}.brand{font-size:22px;font-weight:800;margin-bottom:30px}.nav button{display:block;width:100%;text-align:left;background:transparent;color:#cbd5e1;margin:5px 0}.nav button.active,.nav button:hover{background:#243047;color:#fff}.main{flex:1;padding:24px;overflow:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.top h1{margin:0}.primary{background:#2563eb;color:white}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.card{background:white;border-radius:14px;padding:18px;box-shadow:0 3px 15px #0000000b}.muted{color:#667085;font-size:13px}.big{font-size:27px;font-weight:800;margin-top:8px}.section{display:none}.section.active{display:block}.panel{background:white;border-radius:14px;padding:20px;margin-top:20px;box-shadow:0 3px 15px #0000000b}.toolbar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}.toolbar input{flex:1;min-width:200px}.input{padding:10px;border:1px solid #d7dce5;border-radius:9px;width:100%}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px 8px;border-bottom:1px solid #edf0f5}th{color:#667085;font-size:13px}.badge{padding:5px 9px;border-radius:20px;background:#e8f0ff;color:#2456b8;font-size:12px}.danger{background:#fee2e2;color:#991b1b}.success{background:#dcfce7;color:#166534}.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.box{background:white;width:min(500px,100%);border-radius:15px;padding:22px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.box label{font-size:13px;color:#667085;display:block;margin:10px 0 5px}.close{float:right;background:#eee}.empty{text-align:center;color:#667085;padding:25px}@media(max-width:800px){.sidebar{width:70px;padding:15px 8px}.brand{font-size:0}.brand:after{content:"BF";font-size:20px}.nav button{font-size:0;text-align:center}.nav button:before{content:"•";font-size:24px}.cards{grid-template-columns:1fr 1fr}.main{padding:15px}}@media(max-width:500px){.cards{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<div class="app">
-<aside class="sidebar"><div class="brand">BizFlow CRM</div><div class="nav">
-<button class="active" onclick="show('dashboard',this)">Dashboard</button>
-<button onclick="show('customers',this)">Customers</button>
-<button onclick="show('leads',this)">Leads</button>
-<button onclick="show('deals',this)">Deals</button>
-<button onclick="show('tasks',this)">Tasks</button>
-</div></aside>
-<main class="main">
-<section id="dashboard" class="section active">
-<div class="top"><h1>Dashboard</h1><button class="primary" onclick="openCustomer()">+ Add Customer</button></div>
-<div class="cards">
-<div class="card"><div class="muted">Customers</div><div class="big" id="statCustomers">0</div></div>
-<div class="card"><div class="muted">Leads</div><div class="big" id="statLeads">0</div></div>
-<div class="card"><div class="muted">Open Deals</div><div class="big" id="statDeals">0</div></div>
-<div class="card"><div class="muted">Revenue</div><div class="big" id="statRevenue">₦0</div></div>
-</div>
-<div class="panel"><h2>Getting started</h2><p class="muted">Add your customers, leads, deals and follow-up tasks. Your data is saved in this browser.</p></div>
-</section>
+*{box-sizing:border-box}
 
-<section id="customers" class="section"><div class="top"><h1>Customers</h1><button class="primary" onclick="openCustomer()">+ Add Customer</button></div>
-<div class="panel"><div class="toolbar"><input class="input" id="customerSearch" placeholder="Search customers..." oninput="render()"></div><div id="customerTable"></div></div></section>
-
-<section id="leads" class="section"><div class="top"><h1>Leads</h1><button class="primary" onclick="openLead()">+ Add Lead</button></div>
-<div class="panel"><div id="leadTable"></div></div></section>
-
-<section id="deals" class="section"><div class="top"><h1>Deals</h1><button class="primary" onclick="openDeal()">+ Add Deal</button></div>
-<div class="panel"><div id="dealTable"></div></div></section>
-
-<section id="tasks" class="section"><div class="top"><h1>Tasks</h1><button class="primary" onclick="openTask()">+ Add Task</button></div>
-<div class="panel"><div id="taskTable"></div></div></section>
-</main></div>
-
-<div class="modal" id="modal"><div class="box"><button class="close" onclick="closeModal()">✕</button><h2 id="modalTitle"></h2><div id="modalBody"></div></div></div>
-
-<script>
-const key='bizflowCRM_v1';
-let db=JSON.parse(localStorage.getItem(key)||'{"customers":[],"leads":[],"deals":[],"tasks":[]}');
-const save=()=>{localStorage.setItem(key,JSON.stringify(db));render()};
-const id=()=>Date.now()+Math.random().toString(16).slice(2);
-const money=n=>'₦'+Number(n||0).toLocaleString();
-
-function show(name,btn){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(name).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');render()}
-function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').classList.add('show')}
-function closeModal(){document.getElementById('modal').classList.remove('show')}
-
-function openCustomer(){openModal('Add Customer',`<form onsubmit="addCustomer(event)"><label>Name</label><input class="input" id="cname" required><label>Phone</label><input class="input" id="cphone"><label>Email</label><input class="input" id="cemail" type="email"><label>Business</label><input class="input" id="cbusiness"><label>Notes</label><textarea class="input" id="cnotes"></textarea><br><br><button class="primary">Save Customer</button></form>`)}
-function addCustomer(e){e.preventDefault();db.customers.push({id:id(),name:cname.value,phone:cphone.value,email:cemail.value,business:cbusiness.value,notes:cnotes.value});closeModal();save()}
-
-function openLead(){openModal('Add Lead',`<form onsubmit="addLead(event)"><label>Name</label><input class="input" id="lname" required><label>Phone / Email</label><input class="input" id="lcontact"><label>Status</label><select class="input" id="lstatus"><option>New</option><option>Contacted</option><option>Interested</option><option>Negotiating</option><option>Won</option><option>Lost</option></select><br><br><button class="primary">Save Lead</button></form>`)}
-function addLead(e){e.preventDefault();db.leads.push({id:id(),name:lname.value,contact:lcontact.value,status:lstatus.value});closeModal();save()}
-
-function openDeal(){openModal('Add Deal',`<form onsubmit="addDeal(event)"><label>Customer / Deal</label><input class="input" id="dname" required><label>Amount (₦)</label><input class="input" id="damount" type="number" min="0" required><label>Status</label><select class="input" id="dstatus"><option>Open</option><option>Won</option><option>Lost</option></select><br><br><button class="primary">Save Deal</button></form>`)}
-function addDeal(e){e.preventDefault();db.deals.push({id:id(),name:dname.value,amount:Number(damount.value),status:dstatus.value});closeModal();save()}
-
-function openTask(){openModal('Add Task',`<form onsubmit="addTask(event)"><label>Task</label><input class="input" id="tname" required><label>Due date</label><input class="input" id="tdue" type="date"><label>Priority</label><select class="input" id="tpriority"><option>Normal</option><option>High</option><option>Low</option></select><br><br><button class="primary">Save Task</button></form>`)}
-function addTask(e){e.preventDefault();db.tasks.push({id:id(),name:tname.value,due:tdue.value,priority:tpriority.value,done:false});closeModal();save()}
-
-function del(type,x){db[type]=db[type].filter(a=>a.id!==x);save()}
-function toggleTask(x){let t=db.tasks.find(a=>a.id===x);t.done=!t.done;save()}
-
-function render(){
-statCustomers.textContent=db.customers.length;statLeads.textContent=db.leads.length;statDeals.textContent=db.deals.filter(x=>x.status==='Open').length;
-statRevenue.textContent=money(db.deals.filter(x=>x.status==='Won').reduce((s,x)=>s+x.amount,0));
-let q=(customerSearch?.value||'').toLowerCase();
-let cs=db.customers.filter(x=>(x.name+x.phone+x.email+x.business).toLowerCase().includes(q));
-customerTable.innerHTML=cs.length?`<table><tr><th>Name</th><th>Business</th><th>Phone</th><th>Email</th><th></th></tr>${cs.map(x=>`<tr><td><b>${x.name}</b></td><td>${x.business||'-'}</td><td>${x.phone||'-'}</td><td>${x.email||'-'}</td><td><button onclick="del('customers','${x.id}')">Delete</button></td></tr>`).join('')}</table>`:'<div class="empty">No customers yet.</div>';
-leadTable.innerHTML=db.leads.length?`<table><tr><th>Name</th><th>Contact</th><th>Status</th><th></th></tr>${db.leads.map(x=>`<tr><td>${x.name}</td><td>${x.contact||'-'}</td><td><span class="badge">${x.status}</span></td><td><button onclick="del('leads','${x.id}')">Delete</button></td></tr>`).join('')}</table>`:'<div class="empty">No leads yet.</div>';
-dealTable.innerHTML=db.deals.length?`<table><tr><th>Deal</th><th>Amount</th><th>Status</th><th></th></tr>${db.deals.map(x=>`<tr><td>${x.name}</td><td>${money(x.amount)}</td><td><span class="badge ${x.status==='Won'?'success':x.status==='Lost'?'danger':''}">${x.status}</span></td><td><button onclick="del('deals','${x.id}')">Delete</button></td></tr>`).join('')}</table>`:'<div class="empty">No deals yet.</div>';
-taskTable.innerHTML=db.tasks.length?`<table><tr><th>Task</th><th>Due</th><th>Priority</th><th>Done</th><th></th></tr>${db.tasks.map(x=>`<tr><td>${x.name}</td><td>${x.due||'-'}</td><td>${x.priority}</td><td><input type="checkbox" ${x.done?'checked':''} onchange="toggleTask('${x.id}')"></td><td><button onclick="del('tasks','${x.id}')">Delete</button></td></tr>`).join('')}</table>`:'<div class="empty">No tasks yet.</div>';
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f5f7fb;
+color:#172033;
 }
-render();
-</script>
-</body></html>
+
+button,input,select,textarea{
+font:inherit;
+}
+
+button{
+cursor:pointer;
+}
+
+.hidden{
+display:none!important;
+}
+
+/* AUTH */
+
+.auth{
+min-height:100vh;
+display:grid;
+place-items:center;
+padding:20px;
+}
+
+.authbox{
+width:min(430px,100%);
+background:white;
+padding:30px;
+border-radius:18px;
+box-shadow:0 8px 30px #0001;
+}
+
+.logo{
+font-size:25px;
+font-weight:800;
+}
+
+.logo span{
+color:#2563eb;
+}
+
+.muted{
+color:#6b7280;
+font-size:14px;
+}
+
+.field{
+margin:13px 0;
+}
+
+.field label{
+display:block;
+font-size:13px;
+font-weight:bold;
+margin-bottom:6px;
+}
+
+.input{
+width:100%;
+padding:11px;
+border:1px solid #d5dae3;
+border-radius:9px;
+}
+
+.primary{
+background:#2563eb;
+color:white;
+border:0;
+padding:11px 15px;
+border-radius:9px;
+font-weight:bold;
+}
+
+.full{
+width:100%;
+}
+
+.link{
+color:#2563eb;
+font-weight:bold;
+cursor:pointer;
+}
+
+/* APP */
+
+.side{
+position:fixed;
+inset:0 auto 0 0;
+width:235px;
+background:#111827;
+padding:22px 14px;
+color:#ccd5e5;
+}
+
+.side .logo{
+color:white;
+margin:5px 10px 28px;
+}
+
+.nav button{
+display:block;
+width:100%;
+border:0;
+background:transparent;
+color:#bdc7d8;
+text-align:left;
+padding:12px;
+border-radius:9px;
+margin:5px 0;
+}
+
+.nav button.active,
+.nav button:hover{
+background:#243047;
+color:white;
+}
+
+.logout{
+position:absolute;
+bottom:20px;
+left:14px;
+right:14px;
+width:calc(100% - 28px);
+padding:11px;
+border:0;
+border-radius:9px;
+background:#202a3d;
+color:white;
+}
+
+.main{
+margin-left:235px;
+padding:24px;
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.top h1{
+margin:0;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:14px;
+}
+
+.card,
+.panel{
+background:white;
+border-radius:15px;
+padding:18px;
+box-shadow:0 5px 22px #0000000b;
+}
+
+.big{
+font-size:27px;
+font-weight:800;
+margin-top:8px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:15px;
+margin-top:15px;
+}
+
+.section{
+display:none;
+}
+
+.section.active{
+display:block;
+}
+
+.toolbar{
+display:flex;
+gap:10px;
+margin-bottom:14px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,
+td{
+text-align:left;
+padding:11px 7px;
+border-bottom:1px solid #e5e7eb;
+font-size:14px;
+}
+
+th
