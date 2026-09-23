@@ -2,214 +2,615 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>BizFlow CRM</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{box-sizing:border-box}
-
 body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#f5f7fb;
-color:#172033;
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f6fa;
+  color:#172033;
 }
-
-button,input,select,textarea{
-font:inherit;
-}
-
-button{
-cursor:pointer;
-}
-
-.hidden{
-display:none!important;
-}
-
-/* AUTH */
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
 
 .auth{
-min-height:100vh;
-display:grid;
-place-items:center;
-padding:20px;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
 }
-
-.authbox{
-width:min(430px,100%);
-background:white;
-padding:30px;
-border-radius:18px;
-box-shadow:0 8px 30px #0001;
+.auth-box{
+  background:white;
+  width:100%;
+  max-width:430px;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 10px 40px #0001;
 }
-
 .logo{
-font-size:25px;
-font-weight:800;
+  font-size:30px;
+  font-weight:800;
+  margin-bottom:8px;
 }
-
-.logo span{
-color:#2563eb;
+.muted{color:#687386}
+label{
+  display:block;
+  margin-top:16px;
+  margin-bottom:7px;
+  font-weight:600;
 }
-
-.muted{
-color:#6b7280;
-font-size:14px;
+input,select,textarea{
+  width:100%;
+  padding:13px;
+  border:1px solid #d8dde7;
+  border-radius:10px;
+  outline:none;
 }
-
-.field{
-margin:13px 0;
-}
-
-.field label{
-display:block;
-font-size:13px;
-font-weight:bold;
-margin-bottom:6px;
-}
-
-.input{
-width:100%;
-padding:11px;
-border:1px solid #d5dae3;
-border-radius:9px;
-}
-
+textarea{min-height:90px;resize:vertical}
 .primary{
-background:#2563eb;
-color:white;
-border:0;
-padding:11px 15px;
-border-radius:9px;
-font-weight:bold;
+  width:100%;
+  background:#2864e8;
+  color:white;
+  border:0;
+  padding:14px;
+  border-radius:10px;
+  margin-top:20px;
+  font-weight:700;
+}
+.switch{
+  text-align:center;
+  margin-top:18px;
+  color:#2864e8;
+  cursor:pointer;
+}
+.error{
+  color:#c62828;
+  margin-top:12px;
+}
+.success{
+  color:#16833b;
+  margin-top:12px;
 }
 
-.full{
-width:100%;
+.app{
+  min-height:100vh;
+  display:flex;
 }
-
-.link{
-color:#2563eb;
-font-weight:bold;
-cursor:pointer;
+.sidebar{
+  width:230px;
+  background:#101827;
+  color:white;
+  padding:22px 14px;
+  flex-shrink:0;
 }
-
-/* APP */
-
-.side{
-position:fixed;
-inset:0 auto 0 0;
-width:235px;
-background:#111827;
-padding:22px 14px;
-color:#ccd5e5;
+.brand{
+  font-size:24px;
+  font-weight:800;
+  padding:10px;
+  margin-bottom:25px;
 }
-
-.side .logo{
-color:white;
-margin:5px 10px 28px;
-}
-
 .nav button{
-display:block;
-width:100%;
-border:0;
-background:transparent;
-color:#bdc7d8;
-text-align:left;
-padding:12px;
-border-radius:9px;
-margin:5px 0;
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent;
+  color:#cbd3e1;
+  padding:13px;
+  border-radius:10px;
+  margin-bottom:5px;
 }
-
 .nav button.active,
 .nav button:hover{
-background:#243047;
-color:white;
+  background:#253550;
+  color:white;
 }
-
 .logout{
-position:absolute;
-bottom:20px;
-left:14px;
-right:14px;
-width:calc(100% - 28px);
-padding:11px;
-border:0;
-border-radius:9px;
-background:#202a3d;
-color:white;
+  margin-top:30px!important;
+  color:#ffb4b4!important;
 }
 
 .main{
-margin-left:235px;
-padding:24px;
+  flex:1;
+  padding:28px;
+  overflow:auto;
 }
-
-.top{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:25px;
 }
-
-.top h1{
-margin:0;
+.topbar h1{margin:0}
+.add{
+  background:#2864e8;
+  color:white;
+  border:0;
+  border-radius:10px;
+  padding:13px 18px;
+  font-weight:700;
 }
 
 .cards{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:14px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:18px;
+}
+.card{
+  background:white;
+  border-radius:18px;
+  padding:25px;
+  box-shadow:0 5px 20px #00000008;
+}
+.card-title{color:#687386}
+.card-number{
+  font-size:32px;
+  font-weight:800;
+  margin-top:12px;
 }
 
-.card,
 .panel{
-background:white;
-border-radius:15px;
-padding:18px;
-box-shadow:0 5px 22px #0000000b;
+  background:white;
+  border-radius:18px;
+  padding:22px;
+  margin-top:22px;
 }
+.panel h2{margin-top:0}
 
-.big{
-font-size:27px;
-font-weight:800;
-margin-top:8px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:15px;
-margin-top:15px;
-}
-
-.section{
-display:none;
-}
-
-.section.active{
-display:block;
-}
-
-.toolbar{
-display:flex;
-gap:10px;
-margin-bottom:14px;
-}
-
+.table-wrap{overflow:auto}
 table{
-width:100%;
-border-collapse:collapse;
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  padding:13px;
+  text-align:left;
+  border-bottom:1px solid #edf0f4;
+}
+.action{
+  border:0;
+  background:#eef3ff;
+  color:#2864e8;
+  padding:7px 10px;
+  border-radius:7px;
+}
+.delete{
+  background:#fff0f0;
+  color:#c62828;
 }
 
-th,
-td{
-text-align:left;
-padding:11px 7px;
-border-bottom:1px solid #e5e7eb;
-font-size:14px;
+.modal{
+  position:fixed;
+  inset:0;
+  background:#0008;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:20;
+}
+.modal-box{
+  background:white;
+  width:100%;
+  max-width:500px;
+  max-height:90vh;
+  overflow:auto;
+  padding:25px;
+  border-radius:18px;
+}
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.close{
+  border:0;
+  background:#eee;
+  border-radius:50%;
+  width:35px;
+  height:35px;
+}
+.form-actions{
+  display:flex;
+  gap:10px;
+}
+.form-actions button{flex:1}
+.cancel{
+  border:0;
+  background:#eee;
+  padding:13px;
+  border-radius:10px;
+  margin-top:20px;
+}
+.search{
+  max-width:400px;
+  margin-bottom:18px;
 }
 
-th
+@media(max-width:800px){
+  .sidebar{width:75px}
+  .brand{font-size:0;text-align:center}
+  .brand:first-letter{font-size:24px}
+  .nav button{
+    font-size:0;
+    text-align:center;
+  }
+  .nav button::first-letter{font-size:20px}
+  .main{padding:18px}
+  .cards{grid-template-columns:1fr}
+  .topbar{
+    align-items:flex-start;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- AUTH -->
+<section id="authPage" class="auth">
+  <div class="auth-box">
+    <div class="logo">BizFlow CRM</div>
+    <div class="muted" id="authSubtitle">
+      Manage your business customers, leads and deals.
+    </div>
+
+    <form id="authForm">
+      <div id="businessField">
+        <label>Business name</label>
+        <input id="businessName" placeholder="Your business name">
+      </div>
+
+      <label>Email</label>
+      <input id="email" type="email" required placeholder="you@example.com">
+
+      <label>Password</label>
+      <input id="password" type="password" required minlength="6">
+
+      <button class="primary" id="authButton">
+        Create account
+      </button>
+    </form>
+
+    <div id="authMessage"></div>
+
+    <div class="switch" id="switchMode">
+      Already have an account? Log in
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="appPage" class="app hidden">
+
+  <aside class="sidebar">
+    <div class="brand">BF</div>
+
+    <div class="nav">
+      <button class="active" data-page="dashboard">🏠 Dashboard</button>
+      <button data-page="customers">👥 Customers</button>
+      <button data-page="leads">🎯 Leads</button>
+      <button data-page="deals">💰 Deals</button>
+      <button data-page="tasks">✅ Tasks</button>
+      <button id="logoutBtn" class="logout">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div id="dashboardPage">
+      <div class="topbar">
+        <div>
+          <h1>Dashboard</h1>
+          <div class="muted" id="welcomeBusiness"></div>
+        </div>
+        <button class="add" onclick="openCustomer()">+ Add Customer</button>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Customers</div>
+          <div class="card-number" id="customerCount">0</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Leads</div>
+          <div class="card-number" id="leadCount">0</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Open Deals</div>
+          <div class="card-number" id="dealCount">0</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Won Revenue</div>
+          <div class="card-number" id="revenue">₦0</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Getting started</h2>
+        <p class="muted">
+          Add customers, leads, deals and follow-up tasks.
+          Your information is stored securely in your BizFlow CRM database.
+        </p>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div id="customersPage" class="hidden">
+      <div class="topbar">
+        <h1>Customers</h1>
+        <button class="add" onclick="openCustomer()">+ Add Customer</button>
+      </div>
+
+      <input class="search" id="customerSearch"
+             placeholder="Search customers..."
+             oninput="renderCustomers()">
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="customerTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div id="leadsPage" class="hidden">
+      <div class="topbar">
+        <h1>Leads</h1>
+        <button class="add" onclick="openLead()">+ Add Lead</button>
+      </div>
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Source</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="leadTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEALS -->
+    <div id="dealsPage" class="hidden">
+      <div class="topbar">
+        <h1>Deals</h1>
+        <button class="add" onclick="openDeal()">+ Add Deal</button>
+      </div>
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Deal</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="dealTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="tasksPage" class="hidden">
+      <div class="topbar">
+        <h1>Tasks</h1>
+        <button class="add" onclick="openTask()">+ Add Task</button>
+      </div>
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Due date</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="taskTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</section>
+
+<!-- MODAL -->
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="modalTitle">Add</h2>
+      <button class="close" onclick="closeModal()">×</button>
+    </div>
+
+    <form id="dataForm"></form>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://khezivizitkogibbrfgs.supabase.co";
+const SUPABASE_KEY = "sb_publishable_jvj02hNdZnYq9bjr8U7f8Q_1sr0Maq9";
+
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentUser = null;
+let customers = [];
+let leads = [];
+let deals = [];
+let tasks = [];
+let authMode = "signup";
+
+const $ = id => document.getElementById(id);
+
+async function init(){
+
+  const {data:{session}} = await client.auth.getSession();
+
+  if(session){
+    currentUser = session.user;
+    showApp();
+  }else{
+    showAuth();
+  }
+
+  client.auth.onAuthStateChange((event,session)=>{
+    if(session){
+      currentUser = session.user;
+      showApp();
+    }else{
+      currentUser = null;
+      showAuth();
+    }
+  });
+}
+
+function showAuth(){
+  $("authPage").classList.remove("hidden");
+  $("appPage").classList.add("hidden");
+}
+
+function showApp(){
+  $("authPage").classList.add("hidden");
+  $("appPage").classList.remove("hidden");
+
+  const business =
+    currentUser.user_metadata?.business_name || "Your Business";
+
+  $("welcomeBusiness").textContent = business;
+
+  loadAll();
+}
+
+$("switchMode").onclick=()=>{
+  authMode = authMode==="signup" ? "login" : "signup";
+
+  if(authMode==="login"){
+    $("businessField").classList.add("hidden");
+    $("authButton").textContent="Log in";
+    $("authSubtitle").textContent="Log in to your BizFlow CRM.";
+    $("switchMode").textContent="Don't have an account? Create one";
+  }else{
+    $("businessField").classList.remove("hidden");
+    $("authButton").textContent="Create account";
+    $("authSubtitle").textContent="Manage your business customers, leads and deals.";
+    $("switchMode").textContent="Already have an account? Log in";
+  }
+
+  $("authMessage").innerHTML="";
+};
+
+$("authForm").onsubmit=async(e)=>{
+  e.preventDefault();
+
+  const email=$("email").value.trim();
+  const password=$("password").value;
+  const business=$("businessName").value.trim();
+
+  $("authMessage").innerHTML="";
+
+  if(authMode==="signup"){
+
+    if(!business){
+      $("authMessage").innerHTML='<div class="error">Enter your business name.</div>';
+      return;
+    }
+
+    const {data,error}=await client.auth.signUp({
+      email,
+      password,
+      options:{
+        data:{
+          business_name:business
+        }
+      }
+    });
+
+    if(error){
+      $("authMessage").innerHTML=
+        `<div class="error">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+
+    if(!data.session){
+      $("authMessage").innerHTML=
+        '<div class="success">Account created. Check your email to confirm your account, then log in.</div>';
+    }
+
+  }else{
+
+    const {error}=await client.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if(error){
+      $("authMessage").innerHTML=
+        `<div class="error">${escapeHtml(error.message)}</div>`;
+    }
+  }
+};
+
+$("logoutBtn").onclick=async()=>{
+  await client.auth.signOut();
+};
+
+document.querySelectorAll(".nav button[data-page]").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+
+    document.querySelectorAll("main > div").forEach(x=>x.classList.add("hidden"));
+    $(btn.dataset.page+"Page").classList.remove("hidden");
+  };
+});
+
+async function loadAll(){
+
+  const uid=currentUser.id;
+
+  const [c,l,d,t]=await Promise.all([
+    client.from("customers").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+    client.from("leads").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+    client.from("deals").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+    client.from("tasks").select("*").eq("user_id",uid).order("created_at",{
