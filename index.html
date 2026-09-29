@@ -274,7 +274,7 @@ th,td{
       <label>Password</label>
       <input id="password" type="password" required minlength="6">
 
-      <button class="primary" id="authButton">
+      <button class="primary" id="authButton" type="submit">
         Create account
       </button>
     </form>
@@ -467,7 +467,8 @@ th,td{
 
 <script>
 const SUPABASE_URL = "https://khezivizitkogibbrfgs.supabase.co";
-const SUPABASE_KEY = "sb_publishable_jvj02hNdZnYq9bjr8U7f8Q_1sr0Maq9";
+// Replace this with your actual public key (starts with "eyJ...") from Supabase Dashboard
+const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
 
 const client = window.supabase.createClient(
   SUPABASE_URL,
@@ -483,8 +484,18 @@ let authMode = "signup";
 
 const $ = id => document.getElementById(id);
 
-async function init(){
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  })[m]);
+}
 
+async function init(){
   const {data:{session}} = await client.auth.getSession();
 
   if(session){
@@ -606,11 +617,43 @@ document.querySelectorAll(".nav button[data-page]").forEach(btn=>{
 });
 
 async function loadAll(){
-
+  if(!currentUser) return;
   const uid=currentUser.id;
 
-  const [c,l,d,t]=await Promise.all([
-    client.from("customers").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
-    client.from("leads").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
-    client.from("deals").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
-    client.from("tasks").select("*").eq("user_id",uid).order("created_at",{
+  try {
+    const [c,l,d,t]=await Promise.all([
+      client.from("customers").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+      client.from("leads").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+      client.from("deals").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+      client.from("tasks").select("*").eq("user_id",uid).order("created_at",{ascending:false})
+    ]);
+
+    customers = c?.data || [];
+    leads = l?.data || [];
+    deals = d?.data || [];
+    tasks = t?.data || [];
+
+    updateCounts();
+  } catch(e) {
+    console.error("Error loading data:", e);
+  }
+}
+
+function updateCounts(){
+  $("customerCount").textContent = customers.length;
+  $("leadCount").textContent = leads.length;
+  $("dealCount").textContent = deals.length;
+}
+
+function openCustomer(){ /* Modal placeholder */ }
+function openLead(){ /* Modal placeholder */ }
+function openDeal(){ /* Modal placeholder */ }
+function openTask(){ /* Modal placeholder */ }
+function closeModal(){ $("modal").classList.add("hidden"); }
+function renderCustomers(){ /* Search placeholder */ }
+
+// Boot the application
+init();
+</script>
+</body>
+</html>
