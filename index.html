@@ -1,659 +1,626 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
 <title>BizFlow CRM</title>
-
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
 <style>
+:root{--blue:#3563e9;--ink:#172033;--muted:#687386;--line:#e3e8f0;--bg:#f4f7fb}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#f4f6fa;
-  color:#172033;
-}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg)}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
-
-.auth{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
+.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:700}
+.primary{background:var(--blue);color:white}
+.light{background:#edf1f8;color:#243149}
+.danger{background:#fff0ee;color:#ad352a}
+.notice{padding:12px;border-radius:10px;font-size:13px;line-height:1.45;margin:12px 0;background:#fff0ee;color:#9f2c22}
+.success{background:#e8f8ef;color:#116943}
+.auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#101827,#233967)}
+.card{background:white;border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 12px 35px #10204012}
+.auth .card{width:min(100%,430px);padding:30px}
+.brand{font-weight:850;font-size:22px;display:flex;align-items:center;gap:10px}
+.logo{display:grid;place-items:center;background:var(--blue);color:#fff;border-radius:12px;width:40px;height:40px}
+.muted{color:var(--muted);font-size:13px}
+.field{display:flex;flex-direction:column;gap:7px;margin:14px 0}
+.field label{font-size:13px;font-weight:700}
+.field input,.field select,.field textarea,.toolbar input{width:100%;padding:12px;border:1px solid #d7deea;border-radius:9px;background:white}
+.block{width:100%}
+.switch{text-align:center;margin-top:17px;font-size:13px;color:var(--muted)}
+.link{border:0;background:none;color:var(--blue);font-weight:800}
+.topbar{height:66px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:3}
+.topbar .brand{font-size:18px}
+.topbar .logo{width:34px;height:34px}
+.layout{display:grid;grid-template-columns:215px 1fr;min-height:calc(100vh - 66px)}
+aside{background:white;border-right:1px solid var(--line);padding:14px}
+.nav{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:9px;padding:12px;margin:3px 0;color:#536075;font-weight:700}
+.nav.active,.nav:hover{background:#edf2ff;color:var(--blue)}
+main{padding:25px;max-width:1500px;width:100%;margin:auto}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.head h1{font-size:27px;margin:0 0 5px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.stat{background:white;border:1px solid var(--line);border-radius:14px;padding:17px}
+.stat .num{font-size:24px;font-weight:850;margin-top:8px}
+.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px}
+.panel h2{font-size:17px;margin:0 0 14px}
+.toolbar{display:flex;gap:10px;margin-bottom:12px}
+.toolbar input{max-width:360px}
+.tablewrap{overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:620px}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{color:#8490a3;font-size:11px;text-transform:uppercase}
+td{color:#354156}
+.badge{display:inline-block;padding:4px 8px;border-radius:20px;background:#edf2ff;color:#3154b7;font-size:11px;font-weight:800}
+.actions{display:flex;gap:5px}
+.mini{border:0;border-radius:7px;padding:6px 8px;background:#edf1f8;font-size:11px;font-weight:800}
+.mini.del{background:#fff0ee;color:#a33}
+.empty{text-align:center;padding:30px;color:var(--muted)}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.row{padding:11px 0;border-bottom:1px solid #edf0f5;font-size:13px;display:flex;justify-content:space-between;gap:12px}
+.modalbg{position:fixed;inset:0;background:#111b2c99;display:grid;place-items:center;padding:15px;z-index:9}
+.modal{background:white;border-radius:16px;padding:22px;width:min(100%,520px);max-height:90vh;overflow:auto}
+.modalhead{display:flex;justify-content:space-between;align-items:center}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.span{grid-column:1/-1}
+.right{display:flex;gap:8px}
+.foot{font-size:12px;color:var(--muted);margin-top:18px}
+@media(max-width:850px){
+.layout{grid-template-columns:1fr}
+aside{display:flex;overflow:auto;padding:8px;border-right:0;border-bottom:1px solid var(--line)}
+.nav{white-space:nowrap;width:auto}
+.stats{grid-template-columns:1fr 1fr}
+main{padding:16px}
+.rows{grid-template-columns:1fr}
 }
-.auth-box{
-  background:white;
-  width:100%;
-  max-width:430px;
-  padding:30px;
-  border-radius:20px;
-  box-shadow:0 10px 40px #0001;
-}
-.logo{
-  font-size:30px;
-  font-weight:800;
-  margin-bottom:8px;
-}
-.muted{color:#687386}
-label{
-  display:block;
-  margin-top:16px;
-  margin-bottom:7px;
-  font-weight:600;
-}
-input,select,textarea{
-  width:100%;
-  padding:13px;
-  border:1px solid #d8dde7;
-  border-radius:10px;
-  outline:none;
-}
-textarea{min-height:90px;resize:vertical}
-.primary{
-  width:100%;
-  background:#2864e8;
-  color:white;
-  border:0;
-  padding:14px;
-  border-radius:10px;
-  margin-top:20px;
-  font-weight:700;
-}
-.switch{
-  text-align:center;
-  margin-top:18px;
-  color:#2864e8;
-  cursor:pointer;
-}
-.error{
-  color:#c62828;
-  margin-top:12px;
-}
-.success{
-  color:#16833b;
-  margin-top:12px;
-}
-
-.app{
-  min-height:100vh;
-  display:flex;
-}
-.sidebar{
-  width:230px;
-  background:#101827;
-  color:white;
-  padding:22px 14px;
-  flex-shrink:0;
-}
-.brand{
-  font-size:24px;
-  font-weight:800;
-  padding:10px;
-  margin-bottom:25px;
-}
-.nav button{
-  width:100%;
-  text-align:left;
-  border:0;
-  background:transparent;
-  color:#cbd3e1;
-  padding:13px;
-  border-radius:10px;
-  margin-bottom:5px;
-}
-.nav button.active,
-.nav button:hover{
-  background:#253550;
-  color:white;
-}
-.logout{
-  margin-top:30px!important;
-  color:#ffb4b4!important;
-}
-
-.main{
-  flex:1;
-  padding:28px;
-  overflow:auto;
-}
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:15px;
-  margin-bottom:25px;
-}
-.topbar h1{margin:0}
-.add{
-  background:#2864e8;
-  color:white;
-  border:0;
-  border-radius:10px;
-  padding:13px 18px;
-  font-weight:700;
-}
-
-.cards{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:18px;
-}
-.card{
-  background:white;
-  border-radius:18px;
-  padding:25px;
-  box-shadow:0 5px 20px #00000008;
-}
-.card-title{color:#687386}
-.card-number{
-  font-size:32px;
-  font-weight:800;
-  margin-top:12px;
-}
-
-.panel{
-  background:white;
-  border-radius:18px;
-  padding:22px;
-  margin-top:22px;
-}
-.panel h2{margin-top:0}
-
-.table-wrap{overflow:auto}
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-th,td{
-  padding:13px;
-  text-align:left;
-  border-bottom:1px solid #edf0f4;
-}
-.action{
-  border:0;
-  background:#eef3ff;
-  color:#2864e8;
-  padding:7px 10px;
-  border-radius:7px;
-}
-.delete{
-  background:#fff0f0;
-  color:#c62828;
-}
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:#0008;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  z-index:20;
-}
-.modal-box{
-  background:white;
-  width:100%;
-  max-width:500px;
-  max-height:90vh;
-  overflow:auto;
-  padding:25px;
-  border-radius:18px;
-}
-.modal-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.close{
-  border:0;
-  background:#eee;
-  border-radius:50%;
-  width:35px;
-  height:35px;
-}
-.form-actions{
-  display:flex;
-  gap:10px;
-}
-.form-actions button{flex:1}
-.cancel{
-  border:0;
-  background:#eee;
-  padding:13px;
-  border-radius:10px;
-  margin-top:20px;
-}
-.search{
-  max-width:400px;
-  margin-bottom:18px;
-}
-
-@media(max-width:800px){
-  .sidebar{width:75px}
-  .brand{font-size:0;text-align:center}
-  .brand:first-letter{font-size:24px}
-  .nav button{
-    font-size:0;
-    text-align:center;
-  }
-  .nav button::first-letter{font-size:20px}
-  .main{padding:18px}
-  .cards{grid-template-columns:1fr}
-  .topbar{
-    align-items:flex-start;
-  }
+@media(max-width:520px){
+.topbar{padding:0 12px}
+.topbar .muted{display:none}
+main{padding:12px}
+.head{align-items:flex-start;flex-direction:column}
+.head h1{font-size:23px}
+.stats{gap:8px}
+.stat{padding:12px}
+.stat .num{font-size:20px}
+.panel{padding:13px}
+.grid{grid-template-columns:1fr}
+.span{grid-column:auto}
+.auth .card{padding:23px}
 }
 </style>
 </head>
-
 <body>
 
-<!-- AUTH -->
-<section id="authPage" class="auth">
-  <div class="auth-box">
-    <div class="logo">BizFlow CRM</div>
-    <div class="muted" id="authSubtitle">
-      Manage your business customers, leads and deals.
-    </div>
-
-    <form id="authForm">
-      <div id="businessField">
-        <label>Business name</label>
-        <input id="businessName" placeholder="Your business name">
-      </div>
-
-      <label>Email</label>
-      <input id="email" type="email" required placeholder="you@example.com">
-
-      <label>Password</label>
-      <input id="password" type="password" required minlength="6">
-
-      <button class="primary" id="authButton" type="submit">
-        Create account
-      </button>
-    </form>
-
-    <div id="authMessage"></div>
-
-    <div class="switch" id="switchMode">
-      Already have an account? Log in
-    </div>
-  </div>
+<section id="authScreen" class="auth">
+<div class="card">
+<div class="brand"><span class="logo">B</span> BizFlow CRM</div>
+<h1 id="authTitle">Welcome back</h1>
+<p class="muted" id="authSub">Sign in to manage your business.</p>
+<div id="authNotice" class="notice hidden" role="status"></div>
+<form id="authForm">
+<div id="businessWrap" class="field hidden">
+<label for="businessName">Business name</label>
+<input id="businessName" autocomplete="organization">
+</div>
+<div class="field">
+<label for="email">Email address</label>
+<input id="email" type="email" autocomplete="email" required>
+</div>
+<div class="field">
+<label for="password">Password (at least 6 characters)</label>
+<input id="password" type="password" minlength="6" autocomplete="current-password" required>
+</div>
+<button id="authButton" class="btn primary block" type="submit">Sign in</button>
+</form>
+<div class="switch">
+<span id="switchText">New to BizFlow?</span>
+<button id="switchAuth" class="link" type="button">Create account</button>
+</div>
+<p class="foot">Your CRM records are saved online in your account.</p>
+</div>
 </section>
 
-<!-- APP -->
-<section id="appPage" class="app hidden">
-
-  <aside class="sidebar">
-    <div class="brand">BF</div>
-
-    <div class="nav">
-      <button class="active" data-page="dashboard">🏠 Dashboard</button>
-      <button data-page="customers">👥 Customers</button>
-      <button data-page="leads">🎯 Leads</button>
-      <button data-page="deals">💰 Deals</button>
-      <button data-page="tasks">✅ Tasks</button>
-      <button id="logoutBtn" class="logout">🚪 Logout</button>
-    </div>
-  </aside>
-
-  <main class="main">
-
-    <!-- DASHBOARD -->
-    <div id="dashboardPage">
-      <div class="topbar">
-        <div>
-          <h1>Dashboard</h1>
-          <div class="muted" id="welcomeBusiness"></div>
-        </div>
-        <button class="add" onclick="openCustomer()">+ Add Customer</button>
-      </div>
-
-      <div class="cards">
-        <div class="card">
-          <div class="card-title">Customers</div>
-          <div class="card-number" id="customerCount">0</div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Leads</div>
-          <div class="card-number" id="leadCount">0</div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Open Deals</div>
-          <div class="card-number" id="dealCount">0</div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Won Revenue</div>
-          <div class="card-number" id="revenue">₦0</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Getting started</h2>
-        <p class="muted">
-          Add customers, leads, deals and follow-up tasks.
-          Your information is stored securely in your BizFlow CRM database.
-        </p>
-      </div>
-    </div>
-
-    <!-- CUSTOMERS -->
-    <div id="customersPage" class="hidden">
-      <div class="topbar">
-        <h1>Customers</h1>
-        <button class="add" onclick="openCustomer()">+ Add Customer</button>
-      </div>
-
-      <input class="search" id="customerSearch"
-             placeholder="Search customers..."
-             oninput="renderCustomers()">
-
-      <div class="panel">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Company</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="customerTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- LEADS -->
-    <div id="leadsPage" class="hidden">
-      <div class="topbar">
-        <h1>Leads</h1>
-        <button class="add" onclick="openLead()">+ Add Lead</button>
-      </div>
-
-      <div class="panel">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Source</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="leadTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- DEALS -->
-    <div id="dealsPage" class="hidden">
-      <div class="topbar">
-        <h1>Deals</h1>
-        <button class="add" onclick="openDeal()">+ Add Deal</button>
-      </div>
-
-      <div class="panel">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Deal</th>
-                <th>Customer</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="dealTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TASKS -->
-    <div id="tasksPage" class="hidden">
-      <div class="topbar">
-        <h1>Tasks</h1>
-        <button class="add" onclick="openTask()">+ Add Task</button>
-      </div>
-
-      <div class="panel">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Task</th>
-                <th>Due date</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="taskTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </main>
+<section id="appScreen" class="hidden">
+<header class="topbar">
+<div class="brand"><span class="logo">B</span> BizFlow CRM</div>
+<div class="right">
+<span id="accountEmail" class="muted"></span>
+<button id="logout" class="btn light" type="button">Log out</button>
+</div>
+</header>
+<div class="layout">
+<aside>
+<button class="nav active" data-page="dashboard">▦ Dashboard</button>
+<button class="nav" data-page="customers">♙ Customers</button>
+<button class="nav" data-page="leads">◉ Leads</button>
+<button class="nav" data-page="deals">◇ Deals</button>
+<button class="nav" data-page="tasks">✓ Tasks</button>
+</aside>
+<main id="main"></main>
+</div>
 </section>
 
-<!-- MODAL -->
-<div id="modal" class="modal hidden">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h2 id="modalTitle">Add</h2>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-
-    <form id="dataForm"></form>
-  </div>
+<div id="modalBg" class="modalbg hidden">
+<div class="modal">
+<div class="modalhead">
+<h2 id="modalTitle">Add record</h2>
+<button id="closeModal" class="btn light" type="button">×</button>
+</div>
+<form id="recordForm">
+<div id="modalFields"></div>
+<div id="modalError" class="notice hidden"></div>
+<div class="right" style="justify-content:flex-end;margin-top:15px">
+<button id="cancelModal" class="btn light" type="button">Cancel</button>
+<button id="saveButton" class="btn primary" type="submit">Save</button>
+</div>
+</form>
+</div>
 </div>
 
+<div id="toast" class="notice hidden" role="status" style="position:fixed;right:14px;bottom:14px;z-index:12;max-width:calc(100vw - 28px);box-shadow:0 8px 30px #0002"></div>
+
 <script>
-const SUPABASE_URL = "https://khezivizitkogibbrfgs.supabase.co";
-// Replace this with your actual public key (starts with "eyJ...") from Supabase Dashboard
-const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+(function(){
+"use strict";
 
-const client = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const URL="https://khezivizitkogibbrfgs.supabase.co";
+const KEY="sb_publishable_jvj02hNdZnYq9bjr8U7f8Q_1sr0Maq9";
 
-let currentUser = null;
-let customers = [];
-let leads = [];
-let deals = [];
-let tasks = [];
-let authMode = "signup";
+const $=id=>document.getElementById(id);
 
-const $ = id => document.getElementById(id);
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, m => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  })[m]);
-}
-
-async function init(){
-  const {data:{session}} = await client.auth.getSession();
-
-  if(session){
-    currentUser = session.user;
-    showApp();
-  }else{
-    showAuth();
-  }
-
-  client.auth.onAuthStateChange((event,session)=>{
-    if(session){
-      currentUser = session.user;
-      showApp();
-    }else{
-      currentUser = null;
-      showAuth();
-    }
-  });
-}
-
-function showAuth(){
-  $("authPage").classList.remove("hidden");
-  $("appPage").classList.add("hidden");
-}
-
-function showApp(){
-  $("authPage").classList.add("hidden");
-  $("appPage").classList.remove("hidden");
-
-  const business =
-    currentUser.user_metadata?.business_name || "Your Business";
-
-  $("welcomeBusiness").textContent = business;
-
-  loadAll();
-}
-
-$("switchMode").onclick=()=>{
-  authMode = authMode==="signup" ? "login" : "signup";
-
-  if(authMode==="login"){
-    $("businessField").classList.add("hidden");
-    $("authButton").textContent="Log in";
-    $("authSubtitle").textContent="Log in to your BizFlow CRM.";
-    $("switchMode").textContent="Don't have an account? Create one";
-  }else{
-    $("businessField").classList.remove("hidden");
-    $("authButton").textContent="Create account";
-    $("authSubtitle").textContent="Manage your business customers, leads and deals.";
-    $("switchMode").textContent="Already have an account? Log in";
-  }
-
-  $("authMessage").innerHTML="";
+const S={
+db:null,
+user:null,
+mode:"signin",
+page:"dashboard",
+search:"",
+customers:[],
+leads:[],
+deals:[],
+tasks:[],
+type:null,
+editId:null
 };
 
-$("authForm").onsubmit=async(e)=>{
-  e.preventDefault();
-
-  const email=$("email").value.trim();
-  const password=$("password").value;
-  const business=$("businessName").value.trim();
-
-  $("authMessage").innerHTML="";
-
-  if(authMode==="signup"){
-
-    if(!business){
-      $("authMessage").innerHTML='<div class="error">Enter your business name.</div>';
-      return;
-    }
-
-    const {data,error}=await client.auth.signUp({
-      email,
-      password,
-      options:{
-        data:{
-          business_name:business
-        }
-      }
-    });
-
-    if(error){
-      $("authMessage").innerHTML=
-        `<div class="error">${escapeHtml(error.message)}</div>`;
-      return;
-    }
-
-    if(!data.session){
-      $("authMessage").innerHTML=
-        '<div class="success">Account created. Check your email to confirm your account, then log in.</div>';
-    }
-
-  }else{
-
-    const {error}=await client.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if(error){
-      $("authMessage").innerHTML=
-        `<div class="error">${escapeHtml(error.message)}</div>`;
-    }
-  }
+const defs={
+customer:{
+table:"customers",
+list:"customers",
+title:"Customer",
+fields:[
+["name","Full name","text",true],
+["company","Company","text"],
+["phone","Phone number","text"],
+["email","Email","email"],
+["notes","Notes","textarea",false,true]
+]
+},
+lead:{
+table:"leads",
+list:"leads",
+title:"Lead",
+fields:[
+["name","Full name","text",true],
+["phone","Phone number","text"],
+["email","Email","email"],
+["source","Source","text"],
+["status","Status","select",false,false,["New","Contacted","Qualified","Converted","Lost"]],
+["notes","Notes","textarea",false,true]
+]
+},
+deal:{
+table:"deals",
+list:"deals",
+title:"Deal",
+fields:[
+["title","Deal title","text",true],
+["customer","Customer name","text"],
+["amount","Amount (₦)","number",true],
+["status","Status","select",false,false,["Open","Proposal","Negotiation","Won","Lost"]]
+]
+},
+task:{
+table:"tasks",
+list:"tasks",
+title:"Task",
+fields:[
+["title","Task title","text",true],
+["due_date","Due date","date"],
+["completed","Status","select",false,false,["Pending","Completed"]]
+]
+}
 };
 
-$("logoutBtn").onclick=async()=>{
-  await client.auth.signOut();
+const pageInfo={
+dashboard:["Dashboard","An overview of your business activity",null],
+customers:["Customers","Keep customer contact details organized","customer"],
+leads:["Leads","Track potential customers and follow-ups","lead"],
+deals:["Deals","Monitor sales opportunities and deal values","deal"],
+tasks:["Tasks","Keep track of your daily work","task"]
 };
 
-document.querySelectorAll(".nav button[data-page]").forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
-    btn.classList.add("active");
+function esc(v){
+return String(v??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+}
 
-    document.querySelectorAll("main > div").forEach(x=>x.classList.add("hidden"));
-    $(btn.dataset.page+"Page").classList.remove("hidden");
-  };
+function money(v){
+return new Intl.NumberFormat("en-NG",{
+style:"currency",
+currency:"NGN",
+maximumFractionDigits:2
+}).format(Number(v||0));
+}
+
+function date(v){
+if(!v)return "—";
+let d=new Date(String(v).length===10?v+"T00:00:00":v);
+return isNaN(d)?esc(v):d.toLocaleDateString("en-NG",{
+day:"numeric",
+month:"short",
+year:"numeric"
+});
+}
+
+function note(el,msg,success){
+el.textContent=msg;
+el.className="notice"+(success?" success":"");
+el.classList.remove("hidden");
+}
+
+function toast(msg,success){
+note($("toast"),msg,success);
+clearTimeout(toast.timer);
+toast.timer=setTimeout(()=>$("toast").classList.add("hidden"),6500);
+}
+
+function errText(e){
+let m=e?.message||String(e||"Unknown error");
+if(/Invalid login credentials/i.test(m))return "Email or password is incorrect. Confirm your email if you just registered.";
+if(/Email not confirmed/i.test(m))return "Please confirm your email using the link Supabase sent you.";
+if(/already registered/i.test(m))return "This email already has an account. Switch to Sign in.";
+if(/fetch|network/i.test(m))return "Could not reach Supabase. Check internet connection and project settings.";
+return m;
+}
+
+function setMode(mode){
+S.mode=mode;
+let up=mode==="signup";
+$("authTitle").textContent=up?"Create your account":"Welcome back";
+$("authSub").textContent=up?"Create your business workspace.":"Sign in to manage your business.";
+$("businessWrap").classList.toggle("hidden",!up);
+$("businessName").required=up;
+$("password").autocomplete=up?"new-password":"current-password";
+$("authButton").textContent=up?"Create account":"Sign in";
+$("switchText").textContent=up?"Already have an account?":"New to BizFlow?";
+$("switchAuth").textContent=up?"Sign in":"Create account";
+$("authNotice").classList.add("hidden");
+}
+
+$("switchAuth").onclick=()=>setMode(S.mode==="signin"?"signup":"signin");
+
+$("authForm").addEventListener("submit",async e=>{
+e.preventDefault();
+$("authNotice").classList.add("hidden");
+
+if(!S.db){
+note($("authNotice"),"Supabase has not loaded. Check your connection and refresh the page.");
+return;
+}
+
+let email=$("email").value.trim();
+let password=$("password").value;
+let business=$("businessName").value.trim();
+let b=$("authButton");
+
+if(S.mode==="signup"&&!business){
+note($("authNotice"),"Enter your business name.");
+return;
+}
+
+b.disabled=true;
+b.textContent=S.mode==="signup"?"Creating account…":"Signing in…";
+
+try{
+if(S.mode==="signup"){
+let {data,error}=await S.db.auth.signUp({
+email,
+password,
+options:{data:{business_name:business}}
 });
 
-async function loadAll(){
-  if(!currentUser) return;
-  const uid=currentUser.id;
+if(error)throw error;
 
-  try {
-    const [c,l,d,t]=await Promise.all([
-      client.from("customers").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
-      client.from("leads").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
-      client.from("deals").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
-      client.from("tasks").select("*").eq("user_id",uid).order("created_at",{ascending:false})
-    ]);
+if(data.session){
+S.user=data.user;
+await enterApp();
+}else{
+note($("authNotice"),"Account created. Check your email for a confirmation link, then sign in.",true);
+$("email").value=email;
+setMode("signin");
+}
+}else{
+let {data,error}=await S.db.auth.signInWithPassword({email,password});
+if(error)throw error;
+S.user=data.user;
+await enterApp();
+}
+}catch(e){
+note($("authNotice"),errText(e));
+}finally{
+b.disabled=false;
+b.textContent=S.mode==="signup"?"Create account":"Sign in";
+}
+});
 
-    customers = c?.data || [];
-    leads = l?.data || [];
-    deals = d?.data || [];
-    tasks = t?.data || [];
+async function loadLibrary(){
+if(window.supabase?.createClient)return window.supabase;
 
-    updateCounts();
-  } catch(e) {
-    console.error("Error loading data:", e);
-  }
+for(const src of [
+"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+"https://unpkg.com/@supabase/supabase-js@2"
+]){
+try{
+await new Promise((resolve,reject)=>{
+let s=document.createElement("script");
+s.src=src;
+s.async=true;
+s.onload=resolve;
+s.onerror=()=>{
+s.remove();
+reject(Error("CDN failed"));
+};
+document.head.appendChild(s);
+});
+
+if(window.supabase?.createClient)return window.supabase;
+}catch(e){}
 }
 
-function updateCounts(){
-  $("customerCount").textContent = customers.length;
-  $("leadCount").textContent = leads.length;
-  $("dealCount").textContent = deals.length;
+throw Error("Supabase library did not load. Check your internet connection.");
 }
 
-function openCustomer(){ /* Modal placeholder */ }
-function openLead(){ /* Modal placeholder */ }
-function openDeal(){ /* Modal placeholder */ }
-function openTask(){ /* Modal placeholder */ }
-function closeModal(){ $("modal").classList.add("hidden"); }
-function renderCustomers(){ /* Search placeholder */ }
+async function boot(){
+try{
+let lib=await loadLibrary();
+S.db=lib.createClient(URL,KEY);
 
-// Boot the application
-init();
-</script>
-</body>
-</html>
+let {data,error}=await S.db.auth.getSession();
+if(error)throw error;
+
+if(data.session?.user){
+S.user=data.session.user;
+await enterApp();
+}
+
+S.db.auth.onAuthStateChange((event,session)=>{
+if(event==="SIGNED_OUT"){
+S.user=null;
+$("appScreen").classList.add("hidden");
+$("authScreen").classList.remove("hidden");
+}else if(session?.user){
+S.user=session.user;
+}
+});
+}catch(e){
+note($("authNotice"),"Startup error: "+errText(e));
+}
+}
+
+async function enterApp(){
+$("authScreen").classList.add("hidden");
+$("appScreen").classList.remove("hidden");
+$("accountEmail").textContent=S.user?.email||"";
+await loadData();
+render();
+}
+
+$("logout").onclick=async()=>{
+let {error}=await S.db.auth.signOut();
+if(error){
+toast(errText(error));
+return;
+}
+
+S.user=null;
+S.customers=[];
+S.leads=[];
+S.deals=[];
+S.tasks=[];
+
+$("appScreen").classList.add("hidden");
+$("authScreen").classList.remove("hidden");
+$("password").value="";
+setMode("signin");
+};
+
+async function loadData(){
+if(!S.user)return;
+
+for(let table of ["customers","leads","deals","tasks"]){
+let {data,error}=await S.db.from(table)
+.select("*")
+.order("created_at",{ascending:false});
+
+if(error){
+toast("Loading "+table+" failed: "+error.message+". Check the Supabase table and RLS policies.");
+return;
+}
+
+S[table]=data||[];
+}
+}
+
+document.querySelectorAll("[data-page]").forEach(b=>{
+b.onclick=()=>{
+S.page=b.dataset.page;
+S.search="";
+document.querySelectorAll("[data-page]").forEach(n=>{
+n.classList.toggle("active",n===b);
+});
+render();
+};
+});
+
+function render(){
+let [title,desc,type]=pageInfo[S.page];
+let business=S.user?.user_metadata?.business_name||"Your business";
+
+let h=`<div class="head">
+<div>
+<h1>${esc(title)}</h1>
+<div class="muted">${esc(desc)} · ${esc(business)}</div>
+</div>
+${type?`<button class="btn primary" id="add">+ Add ${type}</button>`:`<button class="btn light" id="refresh">↻ Refresh data</button>`}
+</div>`;
+
+if(S.page==="dashboard")h+=dashboard();
+else h+=tablePage(S.page);
+
+$("main").innerHTML=h;
+
+if($("add"))$("add").onclick=()=>openModal(type);
+
+if($("refresh"))$("refresh").onclick=async()=>{
+await loadData();
+render();
+toast("Data refreshed.",true);
+};
+
+if($("search"))$("search").oninput=e=>{
+S.search=e.target.value;
+let p=$("tableArea");
+p.innerHTML=tableRows(S.page);
+rowEvents();
+$("search").focus();
+};
+
+rowEvents();
+}
+
+function dashboard(){
+let open=S.deals.filter(x=>!/(won|lost|closed)/i.test(x.status||""));
+let pipeline=open.reduce((a,x)=>a+Number(x.amount||0),0);
+let won=S.deals.filter(x=>/won/i.test(x.status||"")).reduce((a,x)=>a+Number(x.amount||0),0);
+let done=S.tasks.filter(x=>x.completed).length;
+
+return `<div class="stats">
+<div class="stat"><div class="muted">Total customers</div><div class="num">${S.customers.length}</div></div>
+<div class="stat"><div class="muted">Active leads</div><div class="num">${S.leads.filter(x=>!/(won|lost|converted)/i.test(x.status||"")).length}</div></div>
+<div class="stat"><div class="muted">Open pipeline</div><div class="num" style="font-size:20px">${money(pipeline)}</div></div>
+<div class="stat"><div class="muted">Tasks completed</div><div class="num">${done}/${S.tasks.length}</div></div>
+</div>
+
+<div class="rows">
+<section class="panel">
+<h2>Recent customers</h2>
+${S.customers.slice(0,5).map(x=>`<div class="row">
+<span><b>${esc(x.name)}</b><br>
+<span class="muted">${esc(x.company||x.email||x.phone||"No extra details")}</span></span>
+<span class="muted">${date(x.created_at)}</span>
+</div>`).join("")||`<div class="empty">No customers yet. Add your first customer.</div>`}
+</section>
+
+<section class="panel">
+<h2>Sales snapshot</h2>
+<div class="row"><span>Won deals</span><b>${money(won)}</b></div>
+<div class="row"><span>Open deal value</span><b>${money(pipeline)}</b></div>
+<div class="row"><span>Open tasks</span><b>${S.tasks.length-done}</b></div>
+<div class="row"><span>Leads in progress</span><b>${S.leads.filter(x=>!/(won|lost|converted)/i.test(x.status||"")).length}</b></div>
+</section>
+</div>
+
+<section class="panel">
+<h2>Quick actions</h2>
+<div class="right" style="flex-wrap:wrap">
+${["customer","lead","deal","task"].map(t=>`<button class="btn ${t==="customer"?"primary":"light"}" data-add="${t}">+ Add ${t}</button>`).join("")}
+</div>
+</section>`;
+}
+
+const cols={
+customers:[["name","Name"],["company","Company"],["phone","Phone"],["email","Email"],["created_at","Added"]],
+leads:[["name","Name"],["source","Source"],["status","Status"],["phone","Phone"],["created_at","Added"]],
+deals:[["title","Deal"],["customer","Customer"],["amount","Amount"],["status","Status"],["created_at","Added"]],
+tasks:[["title","Task"],["due_date","Due date"],["completed","Status"],["created_at","Created"]]
+};
+
+function tablePage(page){
+return `<section class="panel">
+<div class="toolbar">
+<input id="search" type="search" placeholder="Search ${page}…" value="${esc(S.search)}">
+<span class="muted" style="align-self:center">${S[page].length} record(s)</span>
+</div>
+<div id="tableArea" class="tablewrap">${tableRows(page)}</div>
+</section>`;
+}
+
+function tableRows(page){
+let arr=S[page]||[];
+let q=S.search.toLowerCase();
+
+arr=arr.filter(r=>!q||Object.values(r).some(v=>String(v??"").toLowerCase().includes(q)));
+
+if(!arr.length){
+return `<div class="empty">${S[page].length?"No matching records.":"Nothing here yet. Add your first record."}</div>`;
+}
+
+return `<table>
+<thead><tr>${cols[page].map(c=>`<th>${c[1]}</th>`).join("")}<th>Actions</th></tr></thead>
+<tbody>
+${arr.map(r=>`<tr>
+${cols[page].map(([k])=>`<td>${cell(k,r[k])}</td>`).join("")}
+<td><div class="actions">
+<button class="mini" data-edit="${esc(r.id)}" data-type="${page.slice(0,-1)}">Edit</button>
+<button class="mini del" data-delete="${esc(r.id)}" data-type="${page.slice(0,-1)}">Delete</button>
+</div></td>
+</tr>`).join("")}
+</tbody>
+</table>`;
+}
+
+function cell(k,v){
+if(k==="amount")return "<b>"+money(v)+"</b>";
+if(k==="created_at"||k==="due_date")return date(v);
+if(k==="completed")return `<span class="badge">${v?"Completed":"Pending"}</span>`;
+if(k==="status")return `<span class="badge">${esc(v||"New")}</span>`;
+return esc(v||"—");
+}
+
+function rowEvents(){
+document.querySelectorAll("[data-add]").forEach(b=>{
+b.onclick=()=>openModal(b.dataset.add);
+});
+
+document.querySelectorAll("[data-edit]").forEach(b=>{
+b.onclick=()=>openModal(b.dataset.type,b.dataset.edit);
+});
+
+document.querySelectorAll("[data-delete]").forEach(b=>{
+b.onclick=()=>del(b.dataset.type,b.dataset.delete);
+});
+}
+
+function openModal(type,id){
+let d=defs[type];
+if(!d)return;
+
+S.type=type;
+S.editId=id||null;
+
+let old=id?S[d.list].find(x=>String(x.id)===String(id)):null;
+
+$("modalTitle").textContent=(old?"Edit ":"Add ")+d.title;
+$("modalError").classList.add("hidden");
+
+$("modalFields").innerHTML=`<div class="grid">${d.fields.map(f=>{
+let [k,label,kind,required,span,options]=f;
+let val=old?old[k]:(k==="status"?(type==="lead"?"New":"Open"):k==="amount"?0:k==="completed"?false:"");
+
+if(k==="completed")val=val?"Completed":"Pend
